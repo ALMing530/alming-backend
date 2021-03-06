@@ -1,9 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"alming_backend/src/engine"
 )
 
 func main() {
-	fmt.Println("hello wxmServer")
+	engine := engine.CreateEngine()
+	engine.GET("/hello", handleHello)
+	engine.Run()
+}
+func handleHello(c *engine.Context) {
+	c.Response.Write([]byte("hello"))
 }
