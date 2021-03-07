@@ -6,18 +6,24 @@ import (
 )
 
 func Test_db(t *testing.T) {
-	rows, err := DB.Query("select * from user")
-	if err != nil {
-		fmt.Println("An error occerred when exec query sql", err)
+	var u user
+	resMatched := QueryOne(&u, "select * from user")
+	if resMatched {
+		fmt.Println("QueryOne Res:", u)
 	}
-	var id int
-	var name, pass string
-	var params []interface{}
-	params = append(params, &id)
-	params = append(params, &name)
-	params = append(params, &pass)
-	for rows.Next() {
-		rows.Scan(params...)
-		fmt.Println(id, name, pass)
+	var us []user
+	Query(&us, "select * from user")
+	fmt.Println("Query Res:", us)
+	uu := user{
+		Id:       2,
+		Username: "alming_update2",
 	}
+	Exec(&uu, "update user set username=:username where id=:id")
+}
+
+type user struct {
+	Id       int
+	Username string
+	Password string
+	Time     string
 }
