@@ -2,11 +2,15 @@ package main
 
 import (
 	"alming_backend/src/engine"
+	"alming_backend/src/handler"
 )
 
 func main() {
 	engine := engine.CreateEngine()
 	engine.GET("/hello", handleHello)
+	engine.GET("/posts", handler.GetPosts)
+	engine.GET("/post", handler.GetPost)
+	engine.POST("/post", handler.MarkDownUpload)
 	engine.Run()
 }
 func handleHello(c *engine.Context) {
