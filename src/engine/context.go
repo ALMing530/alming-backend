@@ -11,11 +11,12 @@ import (
 
 //Context Http info context
 type Context struct {
-	Response http.ResponseWriter
-	Request  *http.Request
-	Method   string
-	Path     string
-	Header   http.Header
+	Response   http.ResponseWriter
+	Request    *http.Request
+	Method     string
+	Path       string
+	Header     http.Header
+	PathParams map[string]string
 }
 
 func createContext(w http.ResponseWriter, r *http.Request) *Context {
@@ -38,6 +39,10 @@ func (c *Context) GetParamToInt(key string) (res int, err error) {
 		return -1, err
 	}
 	return paramConv, nil
+}
+func (c *Context) PathParamToInt(key string) (int, error) {
+	return strconv.Atoi(c.PathParams[key])
+
 }
 func (c *Context) ParseJSONParam(obj interface{}) {
 	postBody := c.PostBody()

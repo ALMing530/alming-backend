@@ -9,8 +9,10 @@ func main() {
 	engine := engine.CreateEngine()
 	engine.GET("/hello", handleHello)
 	engine.GET("/posts", handler.GetPosts)
-	engine.GET("/post", handler.GetPost)
+	engine.GET("/post/:id", handler.GetPost)
 	engine.POST("/post", handler.MarkDownUpload)
+
+	engine.GET("/words", handler.GetWords)
 	engine.Run()
 }
 func handleHello(c *engine.Context) {

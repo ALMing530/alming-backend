@@ -12,7 +12,7 @@ func GetPosts(c *engine.Context) (posts []repository.Post) {
 }
 
 func GetPost(c *engine.Context) *repository.Post {
-	id, err := c.GetParamToInt("id")
+	id, err := c.PathParamToInt("id")
 	if err == nil {
 		return repository.GetPost(id)
 	}

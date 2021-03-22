@@ -35,7 +35,7 @@ func (n *trieNode) insert(parts []string, height int) {
 	if matchNode == nil {
 		matchNode = &trieNode{
 			part:   parts[height],
-			isWild: parts[height][0] == '$' || parts[height][0] == '*',
+			isWild: parts[height][0] == ':' || parts[height][0] == '*',
 		}
 		n.children = append(n.children, matchNode)
 	}
@@ -53,6 +53,9 @@ func (n *trieNode) searchRecursiveAble(parts []string, height int) *trieNode {
 	}
 	matches := n.matchNodes(parts[height])
 	for _, item := range matches {
+		if item.part == "*" {
+			return item
+		}
 		if res := item.searchRecursiveAble(parts, height+1); res != nil {
 			return res
 		}

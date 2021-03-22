@@ -49,10 +49,6 @@ func CreateMdPostDefault(title string, oringin []byte) (post Post) {
 			}
 		}
 	}
-	// unsafe := blackfriday.Run(oringin, blackfriday.WithRenderer(&blackfriday.HTMLRenderer{}))
-	// p := bluemonday.UGCPolicy()
-	// p.AllowAttrs("class").Matching(regexp.MustCompile("^language-[a-zA-Z0-9]+$")).OnElements("code")
-	// html := p.SanitizeBytes(unsafe)
 	html := markdown.New(markdown.HTML(true)).RenderToString(oringin)
 	post.Title = title
 	post.Summary = summary
