@@ -17,3 +17,8 @@ func GetWords() *[]Word {
 	db.Query(&words, sql)
 	return &words
 }
+
+func InsertWord(word *Word) {
+	var sql = `insert into words values(0,:en,:cn,:familiar)`
+	db.Exec(word, sql)
+}

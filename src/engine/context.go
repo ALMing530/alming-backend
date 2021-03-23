@@ -3,7 +3,7 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -40,6 +40,10 @@ func (c *Context) GetParamToInt(key string) (res int, err error) {
 	}
 	return paramConv, nil
 }
+func (c *Context) PathParam(key string) string {
+	return c.PathParams[key]
+
+}
 func (c *Context) PathParamToInt(key string) (int, error) {
 	return strconv.Atoi(c.PathParams[key])
 
@@ -58,16 +62,7 @@ func (c *Context) PostParam(key string) string {
 }
 
 func (c *Context) PostBody() []byte {
-	body := c.Request.Body
-	buf := make([]byte, 128)
-	var postBody []byte
-	for {
-		readLen, err := body.Read(buf)
-		if readLen == 0 && err == io.EOF {
-			break
-		}
-		postBody = append(postBody, buf[0:readLen]...)
-	}
+	postBody, _ := ioutil.ReadAll(c.Request.Body)
 	return postBody
 }
 
