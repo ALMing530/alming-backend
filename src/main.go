@@ -15,6 +15,8 @@ func main() {
 	engine.GET("/words", handler.GetWords)
 	engine.POST("/word", handler.AddWord)
 	engine.GET("/translate/:word", handler.Translate)
+
+	engine.GET("/sysInfo", handler.GetInfo)
 	engine.Run()
 }
 func handleHello(c *engine.Context) {
