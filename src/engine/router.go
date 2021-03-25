@@ -54,3 +54,10 @@ func (r *router) handle(c *Context) {
 		r.handler[key](c)
 	}
 }
+func (r *router) handleWebsocket(c *Context, wsHelper *WsHelper) {
+	routeNode, params := r.GetRoute(c.Method, c.Path)
+	c.PathParams = params
+	if routeNode != nil {
+		processWebSocket(params, c, wsHelper)
+	}
+}

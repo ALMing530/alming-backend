@@ -3,21 +3,27 @@ package main
 import (
 	"alming_backend/src/engine"
 	"alming_backend/src/handler"
+	"log"
 )
 
 func main() {
-	engine := engine.CreateEngine()
-	engine.GET("/hello", handleHello)
-	engine.GET("/posts", handler.GetPosts)
-	engine.GET("/post/:id", handler.GetPost)
-	engine.POST("/post", handler.MarkDownUpload)
+	server := engine.CreateEngine()
+	server.GET("/hello", handleHello)
+	server.GET("/posts", handler.GetPosts)
+	server.GET("/post/:id", handler.GetPost)
+	server.POST("/post", handler.MarkDownUpload)
 
-	engine.GET("/words", handler.GetWords)
-	engine.POST("/word", handler.AddWord)
-	engine.GET("/translate/:word", handler.Translate)
+	server.GET("/words", handler.GetWords)
+	server.POST("/word", handler.AddWord)
+	server.GET("/translate/:word", handler.Translate)
 
-	engine.GET("/sysInfo", handler.GetInfo)
-	engine.Run()
+	server.GET("/sysInfo", handler.GetInfo)
+
+	server.Websocket("/:id")
+	server.SetWsMsgCallback(func(ws *engine.Ws, msgType int, data []byte) {
+		log.Println("Custom ws callback:", string(data))
+	})
+	server.Run()
 }
 func handleHello(c *engine.Context) {
 	c.Response.Write([]byte("hello"))
