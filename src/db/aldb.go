@@ -160,7 +160,7 @@ func Exec(structure interface{}, sqlStr string) (success bool) {
 	} else {
 		res, err = DB.Exec(SQLParsed)
 	}
-	if err != nil {
+	if err == nil {
 		rowAf, _ := res.RowsAffected()
 		return rowAf > 0
 	}

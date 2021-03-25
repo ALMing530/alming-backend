@@ -7,8 +7,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type WsOpenCallback func(ws *Ws)
+type WsCloseCallback func(ws *Ws, code int, text string)
 type WsMessageCallback func(ws *Ws, msgType int, data []byte)
 type IDgenerater func(pathVar map[string]string, c *Context) string
+
 type Ws struct {
 	Path   string
 	ConnID string
@@ -17,7 +20,9 @@ type Ws struct {
 
 type WsHelper struct {
 	Conns      map[string]Ws
+	OnOpen     WsOpenCallback
 	OnMessage  WsMessageCallback
+	OnClose    WsCloseCallback
 	GenerageID IDgenerater
 }
 
@@ -39,6 +44,11 @@ func processWebSocket(pathVar map[string]string, c *Context, wsHelper *WsHelper)
 		ConnID: wsHelper.GenerageID(pathVar, c),
 		Conn:   conn,
 	}
+	wsHelper.OnOpen(ws)
+	conn.SetCloseHandler(func(code int, text string) error {
+		wsHelper.OnClose(ws, code, text)
+		return nil
+	})
 	go ReadMessage(ws, wsHelper.OnMessage)
 }
 func checkOrigin(r *http.Request) bool {
@@ -48,9 +58,9 @@ func ReadMessage(ws *Ws, callback WsMessageCallback) {
 	for {
 		msgType, msg, err := ws.Conn.ReadMessage()
 		if err != nil {
-			if websocket.IsCloseError(err, 1000) {
-				log.Println("Socket closed")
-			}
+			// if closeErr, ok := err.(*websocket.CloseError); ok {
+			// 	log.Println(closeErr.Code, closeErr.Text)
+			// }
 			ws.Conn.Close()
 			break
 		}
@@ -60,4 +70,11 @@ func ReadMessage(ws *Ws, callback WsMessageCallback) {
 
 func defaultIDgenerater(pathVar map[string]string, c *Context) string {
 	return pathVar["id"]
+}
+
+func defaultWsOpenCallback(ws *Ws) {
+	log.Println("Default Open handler")
+}
+func defaultWsCloseCallback(ws *Ws, code int, text string) {
+	log.Println("Default Close handler")
 }

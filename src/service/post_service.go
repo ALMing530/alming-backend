@@ -38,3 +38,7 @@ func MarkDownUpload(c *engine.Context) {
 func SavePost(post repository.Post) {
 	repository.InsertPost(&post)
 }
+
+func DeletePost(post *repository.Post) {
+	repository.DeletePost(post)
+}

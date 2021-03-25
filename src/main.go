@@ -12,12 +12,15 @@ func main() {
 	server.GET("/posts", handler.GetPosts)
 	server.GET("/post/:id", handler.GetPost)
 	server.POST("/post", handler.MarkDownUpload)
+	server.DELETE("/post/:id", handler.DeletePost)
 
 	server.GET("/words", handler.GetWords)
 	server.POST("/word", handler.AddWord)
 	server.GET("/translate/:word", handler.Translate)
 
 	server.GET("/sysInfo", handler.GetInfo)
+
+	server.GET("/timer", handler.Timer)
 
 	server.Websocket("/:id")
 	server.SetWsMsgCallback(func(ws *engine.Ws, msgType int, data []byte) {

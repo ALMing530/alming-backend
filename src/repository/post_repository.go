@@ -73,8 +73,12 @@ func GetPost(id int) *Post {
 }
 
 func InsertPost(post *Post) {
-	var sql string = `insert into post  values
+	var sql = `insert into post  values
 		(0,:title,:summary,:oringin,:format,:post_type,
 		:visits,:create_time,:update_time,:word_count)`
+	db.Exec(post, sql)
+}
+func DeletePost(post *Post) {
+	var sql = `delete from post where id=:id`
 	db.Exec(post, sql)
 }
