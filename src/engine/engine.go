@@ -8,8 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var wsHelper *WsHelper
-
 //Engine The engine of the web service
 type Engine struct {
 	*router
@@ -19,7 +17,7 @@ type Engine struct {
 func CreateEngine() *Engine {
 	if wsHelper == nil {
 		wsHelper = &WsHelper{
-			Conns:      make(map[string]Ws),
+			Conns:      make(map[string]*Ws),
 			OnOpen:     defaultWsOpenCallback,
 			OnMessage:  defaultWsOnMsg,
 			OnClose:    defaultWsCloseCallback,
@@ -65,8 +63,11 @@ func (e *Engine) DELETE(path string, handler HandleFunc) {
 func (e *Engine) Websocket(path string) {
 	e.router.AddRoute("GET", path, nil)
 }
-func (e *Engine) SetWsMsgCallback(callback WsMessageCallback) {
+func (e *Engine) SetWsOnMessage(callback WsMessageCallback) {
 	wsHelper.OnMessage = callback
+}
+func (e *Engine) GetWsHelper() *WsHelper {
+	return wsHelper
 }
 func allowCORS(w http.ResponseWriter, r *http.Request) {
 	ref := strings.TrimSuffix(r.Referer(), "/")

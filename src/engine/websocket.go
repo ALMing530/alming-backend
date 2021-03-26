@@ -7,9 +7,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var wsHelper *WsHelper
+
 type WsOpenCallback func(ws *Ws)
+
 type WsCloseCallback func(ws *Ws, code int, text string)
+
 type WsMessageCallback func(ws *Ws, msgType int, data []byte)
+
 type IDgenerater func(pathVar map[string]string, c *Context) string
 
 type Ws struct {
@@ -19,7 +24,7 @@ type Ws struct {
 }
 
 type WsHelper struct {
-	Conns      map[string]Ws
+	Conns      map[string]*Ws
 	OnOpen     WsOpenCallback
 	OnMessage  WsMessageCallback
 	OnClose    WsCloseCallback
@@ -32,12 +37,10 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     checkOrigin,
 }
 
-// var wsHelper WsHelper
-
 func processWebSocket(pathVar map[string]string, c *Context, wsHelper *WsHelper) {
 	conn, err := upgrader.Upgrade(c.Response, c.Request, c.Response.Header())
 	if err != nil {
-		log.Fatal("Upgrade to websocket error")
+		log.Println("Upgrade to websocket error")
 	}
 	ws := &Ws{
 		Path:   c.Path,
@@ -47,13 +50,17 @@ func processWebSocket(pathVar map[string]string, c *Context, wsHelper *WsHelper)
 	wsHelper.OnOpen(ws)
 	conn.SetCloseHandler(func(code int, text string) error {
 		wsHelper.OnClose(ws, code, text)
+		delete(wsHelper.Conns, ws.ConnID)
 		return nil
 	})
+	wsHelper.Conns[ws.ConnID] = ws
 	go ReadMessage(ws, wsHelper.OnMessage)
 }
+
 func checkOrigin(r *http.Request) bool {
 	return true
 }
+
 func ReadMessage(ws *Ws, callback WsMessageCallback) {
 	for {
 		msgType, msg, err := ws.Conn.ReadMessage()
@@ -68,6 +75,19 @@ func ReadMessage(ws *Ws, callback WsMessageCallback) {
 	}
 }
 
+func (ws WsHelper) WriteByID(connId string, data []byte) {
+	w := ws.Conns[connId]
+	if w != nil {
+		w.Conn.WriteMessage(websocket.TextMessage, data)
+	}
+}
+
+func (ws WsHelper) WriteBroadcast(data []byte) {
+	for _, item := range ws.Conns {
+		item.Conn.WriteMessage(websocket.TextMessage, data)
+	}
+}
+
 func defaultIDgenerater(pathVar map[string]string, c *Context) string {
 	return pathVar["id"]
 }
@@ -75,6 +95,7 @@ func defaultIDgenerater(pathVar map[string]string, c *Context) string {
 func defaultWsOpenCallback(ws *Ws) {
 	log.Println("Default Open handler")
 }
+
 func defaultWsCloseCallback(ws *Ws, code int, text string) {
 	log.Println("Default Close handler")
 }

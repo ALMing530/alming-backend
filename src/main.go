@@ -23,7 +23,7 @@ func main() {
 	server.GET("/timer", handler.Timer)
 
 	server.Websocket("/:id")
-	server.SetWsMsgCallback(func(ws *engine.Ws, msgType int, data []byte) {
+	server.SetWsOnMessage(func(ws *engine.Ws, msgType int, data []byte) {
 		log.Println("Custom ws callback:", string(data))
 	})
 	server.Run()
