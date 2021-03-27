@@ -2,7 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"strings"
@@ -14,7 +14,6 @@ func QueryOne(structure interface{}, sqlStr string, params ...interface{}) (resM
 	defer catchPanic()
 	rs := reflect.ValueOf(structure)
 	pointTo := rs.Elem()
-	fmt.Println(pointTo.Kind())
 	if pointTo.Kind() != reflect.Struct {
 		panic("QueryOne must to map to a struct,please check your structure parameter")
 	}
@@ -26,11 +25,11 @@ func QueryOne(structure interface{}, sqlStr string, params ...interface{}) (resM
 		rows, err = DB.Query(sqlStr, params...)
 	}
 	if err != nil {
-		fmt.Println("An error occerred when exec query sql", err)
+		log.Println("An error occerred when exec query sql", err)
 	}
 	rc, err := rows.ColumnTypes()
 	if err != nil {
-		fmt.Println("Get column types fail")
+		log.Println("Get column types fail")
 	}
 	container := createContainer(rc)
 	if !rows.Next() {
@@ -38,36 +37,35 @@ func QueryOne(structure interface{}, sqlStr string, params ...interface{}) (resM
 	}
 	column, _ := rows.Columns()
 	rows.Scan(container...)
-	if rows.Next() {
-		panic("QueryOne accept one result but get no more one")
-	}
-	var oneMoreSet bool = false
-	for i, v := range container {
-		rField := pointTo.FieldByName(toPascalCase(column[i]))
-		if rField.CanSet() {
-			switch v.(type) {
-			case *int:
-				if rField.Kind() == reflect.Int {
-					rField.SetInt(int64(*v.(*int)))
-				}
-				oneMoreSet = true
-			case *string:
-				if rField.Kind() == reflect.String {
-					rField.SetString(*v.(*string))
-				}
-				oneMoreSet = true
-			case *sql.NullString:
-				if rField.Kind() == reflect.String {
-					rField.SetString(*&v.(*sql.NullString).String)
-				}
-				oneMoreSet = true
-			}
-		}
-	}
-	if !oneMoreSet {
-		return false
-	}
-	return true
+	return mapResult(container, column, rs)
+
+	// if rows.Next() {
+	// 	panic("QueryOne accept one result but get no more one")
+	// }
+	// var oneMoreSet bool = false
+	// for i, v := range container {
+	// 	rField := pointTo.FieldByName(toPascalCase(column[i]))
+	// 	if rField.CanSet() {
+	// 		switch value := v.(type) {
+	// 		case *int:
+	// 			if rField.Kind() == reflect.Int {
+	// 				rField.SetInt(int64(*value))
+	// 			}
+	// 			oneMoreSet = true
+	// 		case *string:
+	// 			if rField.Kind() == reflect.String {
+	// 				rField.SetString(*value)
+	// 			}
+	// 			oneMoreSet = true
+	// 		case *sql.NullString:
+	// 			if rField.Kind() == reflect.String {
+	// 				rField.SetString(value.String)
+	// 			}
+	// 			oneMoreSet = true
+	// 		}
+	// 	}
+	// }
+	// return oneMoreSet
 }
 
 //Query Query data using given sql  and map to slice given
@@ -87,49 +85,95 @@ func Query(structure interface{}, sqlStr string, params ...interface{}) (resMatc
 		rows, err = DB.Query(sqlStr, params...)
 	}
 	if err != nil {
-		fmt.Println("An error occerred when exec query sql", err)
+		log.Println("An error occerred when exec query sql", err)
 	}
 
 	rc, err := rows.ColumnTypes()
 	if err != nil {
-		fmt.Println("Get column types fail")
+		log.Println("Get column types fail")
 	}
 
 	column, _ := rows.Columns()
-	inType := rs.Type().Elem().Elem()
 	var oneMoreSet bool = false
-	temp := make([]reflect.Value, 0)
 	for rows.Next() {
 		container := createContainer(rc)
 		err = rows.Scan(container...)
-		slot := reflect.New(inType).Elem()
-		for i, v := range container {
-			rField := slot.FieldByName(toPascalCase(column[i]))
-			if rField.CanSet() {
-				switch v.(type) {
-				case *int:
-					if rField.Kind() == reflect.Int {
-						rField.SetInt(int64(*v.(*int)))
-					}
-					oneMoreSet = true
-				case *string:
-					if rField.Kind() == reflect.String {
-						rField.SetString(*v.(*string))
-					}
-					oneMoreSet = true
-				case *sql.NullString:
-					if rField.Kind() == reflect.String {
-						rField.SetString(*&v.(*sql.NullString).String)
-					}
-					oneMoreSet = true
-				}
-			}
+		if err != nil {
+			panic("Scan rows error")
 		}
-		temp = append(temp, slot)
+		oneMoreSet = mapResult(container, column, rs)
+		// return
+
+		// if err != nil {
+		// 	log.Println(err)
+		// }
+		// slot := reflect.New(inType).Elem()
+		// for i, v := range container {
+		// 	rField := slot.FieldByName(toPascalCase(column[i]))
+		// 	if rField.CanSet() {
+		// 		switch value := v.(type) {
+		// 		case *int:
+		// 			if rField.Kind() == reflect.Int {
+		// 				rField.SetInt(int64(*value))
+		// 			}
+		// 			oneMoreSet = true
+		// 		case *string:
+		// 			if rField.Kind() == reflect.String {
+		// 				rField.SetString(*value)
+		// 			}
+		// 			oneMoreSet = true
+		// 		case *sql.NullString:
+		// 			if rField.Kind() == reflect.String {
+		// 				rField.SetString(value.String)
+		// 			}
+		// 			oneMoreSet = true
+		// 		}
+		// 	}
+		// }
+		// temp = append(temp, slot)
 	}
-	arrAdded := reflect.Append(pointTo, temp...)
-	pointTo.Set(arrAdded)
+	// arrAdded := reflect.Append(pointTo, temp...)
+	// pointTo.Set(arrAdded)
+
+	//别忘改
 	return oneMoreSet
+}
+func QueryOneToMany(slice interface{}, sqlStr string, outPk string, inPk string, params ...interface{}) (resMatched bool) {
+	defer catchPanic()
+	rs := reflect.ValueOf(slice)
+	pointTo := rs.Elem()
+	if pointTo.Kind() != reflect.Slice {
+		panic("QueryOne must to map to a slice,please check your structure parameter")
+	}
+	var rows *sql.Rows
+	var err error
+	if len(params) == 0 {
+		rows, err = DB.Query(sqlStr)
+	} else {
+		rows, err = DB.Query(sqlStr, params...)
+	}
+	if err != nil {
+		log.Println("An error occerred when exec query sql", err)
+	}
+
+	rc, err := rows.ColumnTypes()
+	if err != nil {
+		log.Println("Get column types fail")
+	}
+
+	column, _ := rows.Columns()
+	var allRows = make([][]interface{}, 0)
+	for rows.Next() {
+		container := createContainer(rc)
+		err = rows.Scan(container...)
+		if err != nil {
+			panic("Scan rows error")
+		}
+		allRows = append(allRows, container)
+	}
+	mapRes(allRows, column, rs, 0, outPk, inPk)
+	//别忘改
+	return true
 }
 
 //Exec excute sql with the params in the struct you give
@@ -166,9 +210,107 @@ func Exec(structure interface{}, sqlStr string) (success bool) {
 	}
 	return false
 }
-
+func mapResult(container []interface{}, columns []string, value reflect.Value) bool {
+	var slot reflect.Value
+	var arr = make([]reflect.Value, 0)
+	if value.Elem().Kind() == reflect.Struct {
+		slot = value.Elem()
+	} else {
+		slot = reflect.New(value.Type().Elem().Elem()).Elem()
+	}
+	var oneMoreSet = false
+	for i, v := range container {
+		slotField := slot.FieldByName(toPascalCase(columns[i]))
+		if slotField.CanSet() {
+			switch value := v.(type) {
+			case *int:
+				if slotField.Kind() == reflect.Int {
+					slotField.SetInt(int64(*value))
+				}
+				oneMoreSet = true
+			case *string:
+				if slotField.Kind() == reflect.String {
+					slotField.SetString(*value)
+				}
+				oneMoreSet = true
+			case *sql.NullString:
+				if slotField.Kind() == reflect.String {
+					slotField.SetString(value.String)
+				}
+				oneMoreSet = true
+			}
+		}
+	}
+	if value.Elem().Kind() == reflect.Slice {
+		arr = append(arr, slot)
+		added := reflect.Append(value.Elem(), arr...)
+		value.Elem().Set(added)
+	}
+	return oneMoreSet
+}
+func mapRes(allRows [][]interface{}, columns []string, value reflect.Value, height int, pk ...string) reflect.Value {
+	in := value.Elem()
+	inType := in.Type().Elem()
+	var inSlot reflect.Value
+	var inSlotName string
+	for i := 0; i < inType.NumField(); i++ {
+		if inType.Field(i).Type.Kind() == reflect.Slice {
+			inSlotName = inType.Field(i).Name
+			inSlot = reflect.New(inType.Field(i).Type)
+			mapRes(allRows, columns, inSlot, height+1, pk...)
+		}
+	}
+	mark := make(map[interface{}]byte)
+	var pkIdx = -1
+	if len(pk) > 0 {
+		pkIdx = getColIndex(columns, pk[height])
+	}
+	var arr = make([]reflect.Value, 0)
+	for _, row := range allRows {
+		if mark[pkValue(row[pkIdx])] == 1 {
+			continue
+		}
+		outSlot := reflect.New(inType).Elem()
+		var oneMoreSet = false
+		for i, v := range row {
+			slot := outSlot.FieldByName(toPascalCase(columns[i]))
+			if slot.CanSet() {
+				switch setValue := v.(type) {
+				case *int:
+					if slot.Kind() == reflect.Int {
+						slot.SetInt(int64(*setValue))
+						oneMoreSet = true
+					}
+				case *string:
+					if slot.Kind() == reflect.String {
+						slot.SetString(*setValue)
+						oneMoreSet = true
+					}
+				case *sql.NullString:
+					if slot.Kind() == reflect.String {
+						slot.SetString(setValue.String)
+						oneMoreSet = true
+					}
+				}
+			}
+		}
+		slot := outSlot.FieldByName(inSlotName)
+		if slot.CanSet() {
+			slot.Set(inSlot.Elem())
+		}
+		if oneMoreSet {
+			if len(pk) > 0 {
+				mark[pkValue(row[pkIdx])] = 1
+			}
+		}
+		arr = append(arr, outSlot)
+	}
+	added := reflect.Append(in, arr...)
+	in.Set(added)
+	return in
+}
 func catchPanic() {
 	if err := recover(); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

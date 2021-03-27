@@ -1,6 +1,8 @@
 package db
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 func createContainer(columnTyes []*sql.ColumnType) (params []interface{}) {
 	params = make([]interface{}, len(columnTyes))
@@ -52,4 +54,28 @@ func toPascalCase(src string) string {
 		}
 	}
 	return string(dst)
+}
+func getColIndex(colunms []string, col string) int {
+	for idx, item := range colunms {
+		if item == col {
+			return idx
+		}
+	}
+	return -1
+}
+func pkValue(pkContent interface{}) interface{} {
+	switch v := pkContent.(type) {
+	case *int:
+		return *v
+	case *byte:
+		return *v
+	case *float32:
+		return *v
+	case *string:
+		return *v
+	case *sql.NullString:
+		return v.String
+	default:
+		return nil
+	}
 }
