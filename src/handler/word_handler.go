@@ -11,6 +11,10 @@ func GetWords(c *engine.Context) {
 func AddWord(c *engine.Context) {
 	service.AddWord(c)
 }
+func DeleteWord(c *engine.Context) {
+	service.DeleteWord(c)
+}
+
 func Translate(c *engine.Context) {
 	trans := service.Translate(c)
 	c.WriteJSON(trans)

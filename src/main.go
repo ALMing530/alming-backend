@@ -16,6 +16,7 @@ func main() {
 
 	server.GET("/words", handler.GetWords)
 	server.POST("/word", handler.AddWord)
+	server.DELETE("/word/:id", handler.DeleteWord)
 	server.GET("/translate/:word", handler.Translate)
 
 	server.GET("/sysInfo", handler.GetInfo)

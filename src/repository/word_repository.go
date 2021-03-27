@@ -22,3 +22,8 @@ func InsertWord(word *Word) {
 	var sql = `insert into words values(0,:en,:cn,:familiar)`
 	db.Exec(word, sql)
 }
+
+func DeleteWord(word *Word) {
+	var sql = `delete from words where id=:id`
+	db.Exec(word, sql)
+}

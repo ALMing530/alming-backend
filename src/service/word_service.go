@@ -21,6 +21,13 @@ func AddWord(c *engine.Context) {
 	repository.InsertWord(word)
 }
 
+func DeleteWord(c *engine.Context) {
+	id, err := c.PathParamToInt("id")
+	if err == nil {
+		repository.DeleteWord(&repository.Word{Id: id})
+	}
+}
+
 func Translate(c *engine.Context) []string {
 	var trans []string
 	word := c.PathParam("word")

@@ -37,7 +37,11 @@ func QueryOne(structure interface{}, sqlStr string, params ...interface{}) (resM
 	}
 	column, _ := rows.Columns()
 	rows.Scan(container...)
-	return mapResult(container, column, rs)
+	success := mapResult(container, column, rs)
+	if rows.Next() {
+		panic("QueryOne except one result but get no more one")
+	}
+	return success
 }
 
 //Query Query data using given sql  and map to slice given
@@ -119,9 +123,12 @@ func QueryOneToMany(slice interface{}, sqlStr string, outPk string, inPk string,
 func Exec(structure interface{}, sqlStr string) (success bool) {
 	rs := reflect.ValueOf(structure)
 	pointTo := rs.Elem()
+	//自定义sql 表达式中 ？由[]:变量名]代替，找到这些变量名并由反射根据改名称获取所给
+	//结构体实例当中的数据作为参数传递给Exec函数
 	reg, _ := regexp.Compile(`:[a-zA-z_]+`)
 	regFind := reg.FindAllString(sqlStr, -1)
 	params := make([]interface{}, len(regFind))
+	//通过自定义sql表达式获取sql
 	SQLParsed := reg.ReplaceAllString(sqlStr, "?")
 	for i, sqlArgs := range regFind {
 		parseArg := strings.TrimPrefix(sqlArgs, `:`)
@@ -149,12 +156,18 @@ func Exec(structure interface{}, sqlStr string) (success bool) {
 	}
 	return false
 }
+
+//mapResult 将sql rows扫描到的数据填入给定的结构中（结构体或slice)
+//container :单条结果容器，columns 结果集对应数据库中的列名，value
+//被映射对象
 func mapResult(container []interface{}, columns []string, value reflect.Value) bool {
 	var slot reflect.Value
 	var arr = make([]reflect.Value, 0)
+	//判断待映射类型，结构以与slice分别处理
 	if value.Elem().Kind() == reflect.Struct {
 		slot = value.Elem()
 	} else {
+		//slice内数据类型的实例
 		slot = reflect.New(value.Type().Elem().Elem()).Elem()
 	}
 	var oneMoreSet = false
@@ -187,19 +200,29 @@ func mapResult(container []interface{}, columns []string, value reflect.Value) b
 	}
 	return oneMoreSet
 }
-func mapRes(allRows [][]interface{}, columns []string, value reflect.Value, height int, pk ...string) reflect.Value {
+
+//mapRes 将查询的结果集按一对多形式映射到结构当中
+//allRows 所有结果集，columns 结果集对应数据库中的列名,value
+//被映射对象,height工具属性与可变参数pk配合使用，pk（primary
+//key）设计目的是为了兼容QueryOne与Query的结果集映射。实际
+//这两个方法有单独的映射函数
+func mapRes(allRows [][]interface{}, columns []string, value reflect.Value, height int, pk ...string) {
 	in := value.Elem()
 	inType := in.Type().Elem()
 	var inSlot reflect.Value
 	var inSlotName string
+	//查找给定结构的slice属性并为其
 	for i := 0; i < inType.NumField(); i++ {
 		if inType.Field(i).Type.Kind() == reflect.Slice {
+			//记录改属性属性名方便之后通过反射获取改属性并为其赋值
 			inSlotName = inType.Field(i).Name
 			inSlot = reflect.New(inType.Field(i).Type)
 			mapRes(allRows, columns, inSlot, height+1, pk...)
 		}
 	}
+	//mark为一个标识，以sql primary key为map，通过它标识同一元素是否被重复扫描
 	mark := make(map[interface{}]byte)
+	//主键在column中索引位置，方便获取主键值并配合mark判断是否重复扫描
 	var pkIdx = -1
 	if len(pk) > 0 {
 		pkIdx = getColIndex(columns, pk[height])
@@ -246,7 +269,6 @@ func mapRes(allRows [][]interface{}, columns []string, value reflect.Value, heig
 	}
 	added := reflect.Append(in, arr...)
 	in.Set(added)
-	return in
 }
 func catchPanic() {
 	if err := recover(); err != nil {
