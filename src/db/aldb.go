@@ -38,34 +38,6 @@ func QueryOne(structure interface{}, sqlStr string, params ...interface{}) (resM
 	column, _ := rows.Columns()
 	rows.Scan(container...)
 	return mapResult(container, column, rs)
-
-	// if rows.Next() {
-	// 	panic("QueryOne accept one result but get no more one")
-	// }
-	// var oneMoreSet bool = false
-	// for i, v := range container {
-	// 	rField := pointTo.FieldByName(toPascalCase(column[i]))
-	// 	if rField.CanSet() {
-	// 		switch value := v.(type) {
-	// 		case *int:
-	// 			if rField.Kind() == reflect.Int {
-	// 				rField.SetInt(int64(*value))
-	// 			}
-	// 			oneMoreSet = true
-	// 		case *string:
-	// 			if rField.Kind() == reflect.String {
-	// 				rField.SetString(*value)
-	// 			}
-	// 			oneMoreSet = true
-	// 		case *sql.NullString:
-	// 			if rField.Kind() == reflect.String {
-	// 				rField.SetString(value.String)
-	// 			}
-	// 			oneMoreSet = true
-	// 		}
-	// 	}
-	// }
-	// return oneMoreSet
 }
 
 //Query Query data using given sql  and map to slice given
@@ -102,40 +74,7 @@ func Query(structure interface{}, sqlStr string, params ...interface{}) (resMatc
 			panic("Scan rows error")
 		}
 		oneMoreSet = mapResult(container, column, rs)
-		// return
-
-		// if err != nil {
-		// 	log.Println(err)
-		// }
-		// slot := reflect.New(inType).Elem()
-		// for i, v := range container {
-		// 	rField := slot.FieldByName(toPascalCase(column[i]))
-		// 	if rField.CanSet() {
-		// 		switch value := v.(type) {
-		// 		case *int:
-		// 			if rField.Kind() == reflect.Int {
-		// 				rField.SetInt(int64(*value))
-		// 			}
-		// 			oneMoreSet = true
-		// 		case *string:
-		// 			if rField.Kind() == reflect.String {
-		// 				rField.SetString(*value)
-		// 			}
-		// 			oneMoreSet = true
-		// 		case *sql.NullString:
-		// 			if rField.Kind() == reflect.String {
-		// 				rField.SetString(value.String)
-		// 			}
-		// 			oneMoreSet = true
-		// 		}
-		// 	}
-		// }
-		// temp = append(temp, slot)
 	}
-	// arrAdded := reflect.Append(pointTo, temp...)
-	// pointTo.Set(arrAdded)
-
-	//别忘改
 	return oneMoreSet
 }
 func QueryOneToMany(slice interface{}, sqlStr string, outPk string, inPk string, params ...interface{}) (resMatched bool) {
