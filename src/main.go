@@ -3,6 +3,7 @@ package main
 import (
 	"alming_backend/src/engine"
 	"alming_backend/src/handler"
+	"alming_backend/src/service"
 	"log"
 )
 
@@ -27,6 +28,13 @@ func main() {
 	server.SetWsOnMessage(func(ws *engine.Ws, msgType int, data []byte) {
 		log.Println("Custom ws callback:", string(data))
 	})
+	server.SetWsOnOpen(func(ws *engine.Ws) {
+		service.PushUsageData(ws)
+	})
+	server.SetWsOnClose(func(ws *engine.Ws, code int, text string) {
+		service.StopPush(ws)
+	})
+
 	server.Run()
 }
 func handleHello(c *engine.Context) {

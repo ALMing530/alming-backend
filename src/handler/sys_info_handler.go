@@ -12,7 +12,7 @@ func GetInfo(c *engine.Context) {
 	c.WriteJSON(sysInfo)
 }
 func Timer(c *engine.Context) {
-	ws := engine.CreateEngine().GetWsHelper()
+	ws := engine.GetWsHelper()
 	ticker := time.NewTicker(time.Second * 1)
 	go func() {
 		for s := range ticker.C {

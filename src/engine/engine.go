@@ -66,7 +66,14 @@ func (e *Engine) Websocket(path string) {
 func (e *Engine) SetWsOnMessage(callback WsMessageCallback) {
 	wsHelper.OnMessage = callback
 }
-func (e *Engine) GetWsHelper() *WsHelper {
+func (e *Engine) SetWsOnOpen(callback WsOpenCallback) {
+	wsHelper.OnOpen = callback
+}
+func (e *Engine) SetWsOnClose(callback WsCloseCallback) {
+	wsHelper.OnClose = callback
+}
+
+func GetWsHelper() *WsHelper {
 	return wsHelper
 }
 func allowCORS(w http.ResponseWriter, r *http.Request) {
