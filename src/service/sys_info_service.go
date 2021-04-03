@@ -21,6 +21,7 @@ func GetSysInfo() entity.SysInfo {
 	}
 }
 func PushUsageData(ws *engine.Ws) {
+	ws.Conn.WriteJSON(GetSysInfo())
 	ticker := time.NewTicker(time.Second * 5)
 	tickers[ws.ConnID] = ticker
 	go func() {
