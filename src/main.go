@@ -12,7 +12,9 @@ func main() {
 	server.GET("/hello", handleHello)
 	server.GET("/posts", handler.GetPosts)
 	server.GET("/post/:id", handler.GetPost)
-	server.POST("/post", handler.MarkDownUpload)
+	server.POST("/upload/post", handler.MarkDownUpload)
+	server.POST("/post", handler.AddPost)
+	server.PUT("/post", handler.UpdatePost)
 	server.DELETE("/post/:id", handler.DeletePost)
 
 	server.GET("/words", handler.GetWords)

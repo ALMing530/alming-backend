@@ -7,18 +7,28 @@ import (
 	"log"
 )
 
+func AddPost(c *engine.Context) {
+	post := new(repository.Post)
+	c.ParseJSONParam(post)
+	service.AddPost(post)
+	// service.SavePost(post)
+
+}
+
 func GetPosts(c *engine.Context) {
 	posts := service.GetPosts(c)
 	c.WriteJSON(posts)
 }
 
-func MarkDownUpload(c *engine.Context) {
-	service.MarkDownUpload(c)
-}
-
 func GetPost(c *engine.Context) {
 	post := service.GetPost(c)
 	c.WriteJSON(post)
+}
+
+func UpdatePost(c *engine.Context) {
+	post := new(repository.Post)
+	c.ParseJSONParam(post)
+	service.UpdatePost(post)
 }
 
 func DeletePost(c *engine.Context) {
@@ -29,4 +39,8 @@ func DeletePost(c *engine.Context) {
 	service.DeletePost(&repository.Post{
 		Id: id,
 	})
+}
+
+func MarkDownUpload(c *engine.Context) {
+	service.MarkDownUpload(c)
 }

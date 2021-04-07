@@ -56,6 +56,11 @@ func (e *Engine) GET(path string, handler HandleFunc) {
 func (e *Engine) POST(path string, handler HandleFunc) {
 	e.router.AddRoute("POST", path, handler)
 }
+
+func (e *Engine) PUT(path string, handler HandleFunc) {
+	e.router.AddRoute("PUT", path, handler)
+}
+
 func (e *Engine) DELETE(path string, handler HandleFunc) {
 	e.router.AddRoute("DELETE", path, handler)
 }

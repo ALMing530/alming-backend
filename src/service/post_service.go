@@ -4,7 +4,13 @@ import (
 	"alming_backend/src/engine"
 	"alming_backend/src/repository"
 	"io"
+	"time"
 )
+
+func AddPost(post *repository.Post) {
+	repository.FillMissiongField(post)
+	SavePost(post)
+}
 
 func GetPosts(c *engine.Context) (posts []repository.Post) {
 	repository.GetPosts(&posts)
@@ -17,6 +23,19 @@ func GetPost(c *engine.Context) *repository.Post {
 		return repository.GetPost(id)
 	}
 	return nil
+}
+
+func UpdatePost(post *repository.Post) {
+	post.UpdateTime = time.Now().Format("2006-01-02 15:04:05")
+	repository.UpdatePost(post)
+}
+
+func DeletePost(post *repository.Post) {
+	repository.DeletePost(post)
+}
+
+func SavePost(post *repository.Post) {
+	repository.InsertPost(post)
 }
 
 func MarkDownUpload(c *engine.Context) {
@@ -33,12 +52,4 @@ func MarkDownUpload(c *engine.Context) {
 	}
 
 	SavePost(repository.CreateMdPostDefault(title, content))
-}
-
-func SavePost(post repository.Post) {
-	repository.InsertPost(&post)
-}
-
-func DeletePost(post *repository.Post) {
-	repository.DeletePost(post)
 }
