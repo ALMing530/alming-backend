@@ -9,6 +9,10 @@ import (
 
 func main() {
 	server := engine.CreateEngine()
+	api := server.Group("/api")
+	api.GET("/userinfo", func(c *engine.Context) {
+		c.WriteText("user:alming")
+	})
 	server.GET("/hello", handleHello)
 	server.GET("/posts", handler.GetPosts)
 	server.GET("/post/:id", handler.GetPost)

@@ -45,7 +45,9 @@ func toPascalCase(src string) string {
 	}
 	for i := 1; i < len(src); {
 		if src[i] == '_' {
-			dst = append(dst, src[i+1]-32)
+			if src[0] > 96 && src[0] < 123 {
+				dst = append(dst, src[i+1]-32)
+			}
 			i += 2
 		} else {
 			dst = append(dst, src[i])

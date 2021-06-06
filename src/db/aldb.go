@@ -127,15 +127,18 @@ func Exec(structure interface{}, sqlStr string) (success bool) {
 	//结构体实例当中的数据作为参数传递给Exec函数
 	reg, _ := regexp.Compile(`:[a-zA-z_]+`)
 	regFind := reg.FindAllString(sqlStr, -1)
+	//通过反射创建参数列表的容器
 	params := make([]interface{}, len(regFind))
 	//通过自定义sql表达式获取sql
 	SQLParsed := reg.ReplaceAllString(sqlStr, "?")
+	//通过自定义sql中：找到对应的参数
 	for i, sqlArgs := range regFind {
 		parseArg := strings.TrimPrefix(sqlArgs, `:`)
 		fieldName := toPascalCase(parseArg)
 		field := pointTo.FieldByName(fieldName)
 		switch field.Kind() {
 		case reflect.Int:
+			//将参数添加到参数容器中
 			params[i] = field.Int()
 		case reflect.String:
 			params[i] = field.String()
@@ -171,11 +174,14 @@ func mapResult(container []interface{}, columns []string, value reflect.Value) b
 		slot = reflect.New(value.Type().Elem().Elem()).Elem()
 	}
 	var oneMoreSet = false
+	//遍历一行结果集找到其在结构体中的位置并赋值
 	for i, v := range container {
+		//找到对应结构体的属性
 		slotField := slot.FieldByName(toPascalCase(columns[i]))
 		if slotField.CanSet() {
 			switch value := v.(type) {
 			case *int:
+				//只有与其结构体类型匹配才赋值
 				if slotField.Kind() == reflect.Int {
 					slotField.SetInt(int64(*value))
 				}
@@ -193,6 +199,8 @@ func mapResult(container []interface{}, columns []string, value reflect.Value) b
 			}
 		}
 	}
+	//如果被映射对象是slice也就是多结果集映射要通过反射将映射出的
+	//结构体实例追加到结果集中
 	if value.Elem().Kind() == reflect.Slice {
 		arr = append(arr, slot)
 		added := reflect.Append(value.Elem(), arr...)

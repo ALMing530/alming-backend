@@ -11,6 +11,8 @@ import (
 //Engine The engine of the web service
 type Engine struct {
 	*router
+	*RouterGroup
+	gruops []*RouterGroup
 }
 
 //CreateEngine Create a new Engine
@@ -24,9 +26,14 @@ func CreateEngine() *Engine {
 			GenerageID: defaultIDgenerater,
 		}
 	}
-	return &Engine{
+	engine := &Engine{
 		router: createRouter(),
 	}
+	engine.RouterGroup = &RouterGroup{
+		engine: engine,
+	}
+	engine.gruops = append(engine.gruops, engine.RouterGroup)
+	return engine
 }
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := createContext(w, r)
@@ -49,21 +56,21 @@ func (e *Engine) Run() {
 }
 
 //GET Register a get router
-func (e *Engine) GET(path string, handler HandleFunc) {
-	e.router.AddRoute("GET", path, handler)
-}
+// func (e *Engine) GET(path string, handler HandleFunc) {
+// 	e.router.AddRoute("GET", path, handler)
+// }
 
-func (e *Engine) POST(path string, handler HandleFunc) {
-	e.router.AddRoute("POST", path, handler)
-}
+// func (e *Engine) POST(path string, handler HandleFunc) {
+// 	e.router.AddRoute("POST", path, handler)
+// }
 
-func (e *Engine) PUT(path string, handler HandleFunc) {
-	e.router.AddRoute("PUT", path, handler)
-}
+// func (e *Engine) PUT(path string, handler HandleFunc) {
+// 	e.router.AddRoute("PUT", path, handler)
+// }
 
-func (e *Engine) DELETE(path string, handler HandleFunc) {
-	e.router.AddRoute("DELETE", path, handler)
-}
+// func (e *Engine) DELETE(path string, handler HandleFunc) {
+// 	e.router.AddRoute("DELETE", path, handler)
+// }
 
 func (e *Engine) Websocket(path string) {
 	e.router.AddRoute("GET", path, nil)
